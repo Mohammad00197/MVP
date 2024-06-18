@@ -2,6 +2,10 @@ import pandas as pd
 import chardet
 import os
 import re
+from datetime import datetime
+import warnings
+warnings.filterwarnings("ignore")
+
 
 def detect_encoding(file_path):
     with open(file_path, 'rb') as f:
@@ -53,9 +57,11 @@ def check_duplicates(df, subset_columns):
 def check_inconsistent_associations(df):
     inconsistent_customer_ids = df.groupby('Customer ID')['Customer Name'].nunique()
     inconsistent_customer_ids = inconsistent_customer_ids[inconsistent_customer_ids > 1]
-    inconsistent_product_ids  = df.groupby('Product ID')['Product Name'].nunique()
-    inconsistent_product_ids  = inconsistent_product_ids[inconsistent_product_ids > 1]
-    return inconsistent_customer_ids,inconsistent_product_ids
+    
+    inconsistent_product_ids = df.groupby('Product ID')['Product Name'].nunique()
+    inconsistent_product_ids = inconsistent_product_ids[inconsistent_product_ids > 1]
+    
+    return inconsistent_customer_ids, inconsistent_product_ids
 
 def check_mixed_data_types(df):
     mixed_type_issues = []
@@ -75,7 +81,18 @@ def calculate_price_per_unit(df):
 def find_price_inconsistencies(df, golden_records):
     inconsistencies = []
     for index, row in df.iterrows():
-        key = (row.get('Product ID'),row.get('Ship Mode'),row.get('Customer ID'),row.get('Customer Name'),row.get('Segment'),row.get('Country'),row.get('City'),row.get('State'),row.get('Postal Code'),row.get('Region'))
+        key = (
+            row.get('Product ID'),
+            row.get('Ship Mode'),
+            row.get('Customer ID'),
+            row.get('Customer Name'),
+            row.get('Segment'),
+            row.get('Country'),
+            row.get('City'),
+            row.get('State'),
+            row.get('Postal Code'),
+            row.get('Region')
+        )
         price_per_unit = row.get('Price per Unit')
         if key in golden_records:
             avg_price = golden_records[key]
@@ -89,6 +106,23 @@ def check_sales_profit_inconsistencies(df):
     except KeyError:
         return pd.DataFrame()
 
+def check_date_formats(df, date_columns):
+    date_format = "%d-%m-%y"
+    inconsistent_dates = []
+
+    for column in date_columns:
+        df[column + '_parsed'] = pd.to_datetime(df[column], errors='coerce')
+        inconsistent = df[df[column + '_parsed'].isnull() & df[column].notnull()]
+        if not inconsistent.empty:
+            inconsistent_dates.append((column, inconsistent))
+        else:
+            print("all issues sorted")
+
+        df[column] = df[column + '_parsed'].dt.strftime(date_format)
+        df.drop(columns=[column + '_parsed'], inplace=True)
+
+    return inconsistent_dates, df
+
 def analyze_files(base_files, standard_schema):
     report = {
         "File Extension Issues": files_extension_check(base_files),
@@ -101,6 +135,7 @@ def analyze_files(base_files, standard_schema):
         "Mixed Data Type Issues": [],
         "Price Inconsistencies": [],
         "Sales Profit Inconsistencies": [],
+        "Date Format Issues": [],
         "Missing Columns": []
     }
     
@@ -118,6 +153,7 @@ def analyze_files(base_files, standard_schema):
         "Mixed Data Type Issues": [],
         "Price Inconsistencies": [],
         "Sales Profit Inconsistencies": [],
+        "Date Format Issues": [],
         "Missing Columns": []
     }
     
@@ -134,9 +170,12 @@ def analyze_files(base_files, standard_schema):
             schema_issues = validate_schema(df, standard_schema)
             null_issues = check_null_values(df)
 
+            date_columns = ['Order Date', 'Ship Date']
+            date_issues, df = check_date_formats(df, date_columns)
+
             missing_columns = [col for col in standard_schema if col not in df.columns]
             if missing_columns:
-                report["Missing Columns"].append((file, f"Missing columns: {' , '.join(missing_columns)}", len(df), "Ensure all required columns are present"))
+                report["Missing Columns"].append((file, f"Missing columns: {', '.join(missing_columns)}", len(df), "Ensure all required columns are present"))
                 issue_examples["Missing Columns"].append((file, {"Missing Columns": missing_columns}))
                 continue
 
@@ -152,6 +191,9 @@ def analyze_files(base_files, standard_schema):
             for column, null_rows in null_issues:
                 report["Null Value Issues"].append((file, f"Null values in column {column}", len(null_rows), "Fill or remove null values"))
                 issue_examples["Null Value Issues"].append(null_rows)
+            for column, inconsistent_dates in date_issues:
+                report["Date Format Issues"].append((file, f"Inconsistent date formats in column {column}", len(inconsistent_dates), "Ensure consistent date formats"))
+                issue_examples["Date Format Issues"].append(inconsistent_dates)
             if not duplicates.empty:
                 report["Duplicate Issues"].append((file, "Found duplicates", len(duplicates), "Remove duplicate rows"))
                 issue_examples["Duplicate Issues"].append(duplicates)
@@ -168,7 +210,7 @@ def analyze_files(base_files, standard_schema):
 
             all_data = pd.concat([all_data, df], ignore_index=True)
 
-    context_columns = ['Product ID', 'Ship Mode', 'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region']
+        context_columns = ['Product ID', 'Ship Mode', 'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region']
     golden_records = all_data.groupby(context_columns)['Price per Unit'].mean().to_dict()
 
     price_inconsistencies = find_price_inconsistencies(all_data, golden_records)
@@ -265,7 +307,6 @@ def create_data_marts(all_data):
     }
     return data_marts
 
-
 def save_data_marts_to_csv(data_marts, directory='data_marts'):
     os.makedirs(directory, exist_ok=True)
     for mart_name, df in data_marts.items():
@@ -288,3 +329,4 @@ def summarize_data_marts(data_marts):
 
 def save_summary_to_csv(data_mart_counts_df, file_name='Task_6_2_Data_Marts_Rows.csv'):
     data_mart_counts_df.to_csv(file_name, index=False)
+
