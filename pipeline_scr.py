@@ -33,14 +33,13 @@ report, issue_examples, cleaned_order_details, inconsistencies_to_check = analyz
 
 save_report_to_excel(report, issue_examples)
 
-data_marts = create_data_marts(cleaned_order_details)  
+data_marts = create_data_marts(cleaned_order_details)
 save_data_marts_to_csv(data_marts)
 
 data_mart_counts_df = summarize_data_marts(data_marts)
 save_summary_to_csv(data_mart_counts_df)
 
 shutil.make_archive('Task_6_1_Data_Marts', 'zip', 'data_marts')
-
 inconsistencies_to_check.to_csv('inconsistencies_to_check_with_SEMS.csv', index=False)
 
 print("All tasks are completed successfully.")
