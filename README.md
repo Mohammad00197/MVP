@@ -21,6 +21,8 @@ This project aims to design and implement a data warehouse in alignment with MVP
 - **pipeline_scr.py**: The main script for running the ETL (Extract, Transform, Load) pipeline, including data extraction, transformation, and loading processes.
 - **data_quality_helpers.py**: Contains helper functions used for data quality checks and cleansing operations.
 
+
+
 ### Approach
 My role involves designing and implementing an ELT (Extract, Load, Transform) pipeline and data warehouse for MVP, which sends data on a monthly basis through SFTP. These files can be modified and updated post-delivery, necessitating robust data processing capabilities. I have crafted a high-level design and technical architecture to address this.
 
@@ -49,6 +51,8 @@ Additional benefits:
 
 BigQuery is ideal for businesses needing rapid and cost-effective analysis of large datasets.
 
+
+
 ### Data Quality Inconsistencies
 
 The helpers script identified and addressed various data quality inconsistencies to ensure high-quality data for analysis. Here are the key types of inconsistencies I encountered and the measures taken to resolve them:
@@ -71,6 +75,9 @@ The helpers script identified and addressed various data quality inconsistencies
 
 These inconsistencies were automatically detected and reported by the data quality scripts. The implemented controls and remediation steps have significantly improved the reliability and accuracy of the data, ensuring it meets the high standards required for MVP's financial reporting and descriptive analysis.
 
+
+
+
 ## Normalization Standards
 
 To ensure the data is optimally structured for analysis, the project adheres to the NF3 (Third Normal Form) standards of normalization. These standards help in organizing the data to reduce redundancy, improve data integrity, and enhance query performance. Here are the key aspects of the normalization process followed in this project:
@@ -86,6 +93,8 @@ To ensure the data is optimally structured for analysis, the project adheres to 
 **Hierarchical Data Organization**: Data is organized hierarchically, allowing for efficient querying and reporting. This structure supports complex queries needed for descriptive analytics.
 
 **Enhanced Query Performance**: By following NF3 standards, the database structure is optimized for performance, enabling faster retrieval and analysis of data.
+
+
 
 
 
