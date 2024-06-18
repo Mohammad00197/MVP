@@ -119,7 +119,6 @@ To ensure the data is optimally structured for analysis, the project adheres to 
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Mohammad00197/MVP.git
-   cd MVP
    
 2. **Ensure you have Python installed. Then, install the necessary packages using pip and run the pipline**:
   ```bash
