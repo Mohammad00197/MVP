@@ -275,7 +275,10 @@ def summarize_data_marts(data_marts):
     data_mart_counts = []
     for mart_name, df in data_marts.items():
         row_count = len(df)
-        if 'Row ID' in df.columns:
+        if mart_name == "order_details":
+            distinct_order_detail_id_count = df['Order ID'].nunique()
+            data_mart_counts.append([mart_name, row_count, distinct_order_detail_id_count, None])
+        elif 'Row ID' in df.columns:
             distinct_row_id_count = df['Row ID'].nunique()
             data_mart_counts.append([mart_name, row_count, row_count, distinct_row_id_count])
         else:
@@ -285,4 +288,3 @@ def summarize_data_marts(data_marts):
 
 def save_summary_to_csv(data_mart_counts_df, file_name='Task_6_2_Data_Marts_Rows.csv'):
     data_mart_counts_df.to_csv(file_name, index=False)
-
